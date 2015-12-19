@@ -8,8 +8,6 @@ import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
-import org.jboss.ddoyle.camel.hystrix.command.HystrixCommandFactory;
-import org.jboss.ddoyle.camel.hystrix.command.HystrixCommandFactoryBuilder;
 
 /**
  * Represents a camel-hystrix-component endpoint.
