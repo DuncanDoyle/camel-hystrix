@@ -1,13 +1,8 @@
-Camel Component Project
+Hystrix Camel Component Project
 =======================
 
-This project is a template of a Camel component.
+This project implements a Camel-Hystrix component, providing integration between Apache Camel (http://camel.apache.org) and Netflix Hystrix (https://github.com/Netflix/Hystrix).
 
 To build this project use
 
-    mvn install
-
-For more help see the Apache Camel documentation:
-
-    http://camel.apache.org/writing-components.html
-    
+    mvn clean install
