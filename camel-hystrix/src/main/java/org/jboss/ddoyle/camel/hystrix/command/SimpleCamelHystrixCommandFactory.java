@@ -63,8 +63,16 @@ public class SimpleCamelHystrixCommandFactory implements HystrixCommandFactory {
 		if (configuration.getCircuitBreakerSleepWindowInMilliseconds() != null) {
 			hcpSetter.withCircuitBreakerSleepWindowInMilliseconds(configuration.getCircuitBreakerSleepWindowInMilliseconds());
 		}
-		setter.andCommandPropertiesDefaults(hcpSetter);
 		
+		if (configuration.getMetricsRollingStatisticalWindowInMilliseconds() != null) {
+			hcpSetter.withMetricsRollingStatisticalWindowInMilliseconds(configuration.getMetricsRollingStatisticalWindowInMilliseconds());
+		}
+		
+		if (configuration.getMetricsRollingStatisticalWindowBuckets() != null) {
+			hcpSetter.withMetricsRollingStatisticalWindowBuckets(configuration.getMetricsRollingStatisticalWindowBuckets());
+		}
+		
+		setter.andCommandPropertiesDefaults(hcpSetter);
 		return setter;
 	}
 

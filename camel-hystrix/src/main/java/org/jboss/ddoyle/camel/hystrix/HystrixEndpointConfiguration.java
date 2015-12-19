@@ -28,6 +28,12 @@ public class HystrixEndpointConfiguration {
 	
 	private Integer circuitBreakerSleepWindowInMilliseconds;
 
+	/* ------ Hystrix Statistics configuration options -------- */
+	private Integer metricsRollingStatisticalWindowInMilliseconds;
+	
+	private Integer metricsRollingStatisticalWindowBuckets;
+	
+	
 
 	/* ------ Getters & Setters -------- */
 	
@@ -78,6 +84,24 @@ public class HystrixEndpointConfiguration {
 	public void setCircuitBreakerSleepWindowInMilliseconds(Integer circuitBreakerSleepWindowInMilliseconds) {
 		this.circuitBreakerSleepWindowInMilliseconds = circuitBreakerSleepWindowInMilliseconds;
 	}
+
+	public Integer getMetricsRollingStatisticalWindowInMilliseconds() {
+		return metricsRollingStatisticalWindowInMilliseconds;
+	}
+
+	public void setMetricsRollingStatisticalWindowInMilliseconds(Integer metricsRollingStatisticalWindowInMilliseconds) {
+		this.metricsRollingStatisticalWindowInMilliseconds = metricsRollingStatisticalWindowInMilliseconds;
+	}
+
+	public Integer getMetricsRollingStatisticalWindowBuckets() {
+		return metricsRollingStatisticalWindowBuckets;
+	}
+
+	public void setMetricsRollingStatisticalWindowBuckets(Integer metricsRollingStatisticalWindowBuckets) {
+		this.metricsRollingStatisticalWindowBuckets = metricsRollingStatisticalWindowBuckets;
+	}
+	
+	
 	
 	
 }

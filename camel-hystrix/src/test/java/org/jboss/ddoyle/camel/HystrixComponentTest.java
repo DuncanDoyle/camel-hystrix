@@ -9,13 +9,12 @@ import org.apache.camel.builder.ExchangeBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit4.CamelTestSupport;
-import org.jboss.ddoyle.camel.hystrix.command.SimpleCamelHystrixCommand;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.netflix.hystrix.Hystrix;
 import com.netflix.hystrix.HystrixCircuitBreaker;
+import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 
@@ -29,7 +28,9 @@ public class HystrixComponentTest extends CamelTestSupport {
 
 	private static final String FALLBACK_ENDPOINT = "direct:hystrixFallback";
 
-	private static final String COMMAND_GROUP_KEY = "myHystrixUnitTestKey";
+	private static final String COMMAND_KEY = "myHystruxUnitTestKey";
+
+	private static final String COMMAND_GROUP_KEY = "myHystrixUnitTestGroupKey";
 
 	@Produce(uri = INPUT_ENDPOINT)
 	private ProducerTemplate producerTemplate;
@@ -133,12 +134,11 @@ public class HystrixComponentTest extends CamelTestSupport {
 	 * succeeds, the circuit-breaker transitions to CLOSED and the logic in 1. takes over again.
 	 * 
 	 */
-	//TODO: Further implement and enable test.
-	//@Test
+	@Test
 	public void testHystrixComponentCircuitBreaker() throws Exception {
 		MockEndpoint mock = getMockEndpoint("mock:advicedFallback");
 		// mock.expectedMinimumMessageCount(1);
-		mock.expectedMessageCount(10);
+		mock.expectedMessageCount(5);
 
 		/*
 		 * Advice the 'to' route to throw an exception. We never want to end up in the main route anyway, so we can always throw an
@@ -173,7 +173,7 @@ public class HystrixComponentTest extends CamelTestSupport {
 		// Send a message to the actual endpoint
 		LOGGER.info("Sending exchange.");
 		// TODO: Maybe we need to loop here a couple of times to open the circuit-breaker.
-		int loops = 10;
+		int loops = 5;
 		for (int counter = 0; counter < loops; counter++) {
 			Exchange exchange = exchangeBuilder.build();
 			producerTemplate.send(exchange);
@@ -184,15 +184,29 @@ public class HystrixComponentTest extends CamelTestSupport {
 		// Retrieve the circuit-breaker and check whether it is open.
 		// The circuit-breaker is retrieved via the HystrixCommandKey, which, by default is generated from the HystrixCommand implementation
 		// class-name.
-		HystrixCircuitBreaker circuitBreaker = getCircuitBreaker(SimpleCamelHystrixCommand.class.getSimpleName());
+		HystrixCircuitBreaker circuitBreaker = getCircuitBreaker(COMMAND_KEY);
 
 		if (circuitBreaker == null) {
 			throw new IllegalStateException("We should have a circuit-breaker for this command-group.");
 		}
-		assertEquals(true, circuitBreaker.isOpen());
-
+		
+		/*
+		 * We need to give Hystrix some time to flip the CircuitBreaker. That seems to be done asynchronously.
+		 * A bit crap to use Thread.sleep in a unit test though, maybe we can do something smarter with a Phaser.
+		 * 
+		 * We wait for max 1 second.
+		 */
+		boolean isCircuitBreakerOpen = false;
+		int maxWaitLoop = 20;
+		int waitLoop = 0;
+		int threadSleepTime = 50;
+		while (isCircuitBreakerOpen == false && waitLoop < maxWaitLoop) {
+			isCircuitBreakerOpen = circuitBreaker.isOpen();
+			Thread.sleep(threadSleepTime);
+			waitLoop++;
+		}
+		assertEquals(true, isCircuitBreakerOpen);
 		context.stop();
-
 	}
 
 	/**
@@ -214,7 +228,11 @@ public class HystrixComponentTest extends CamelTestSupport {
 		return new RouteBuilder() {
 			public void configure() {
 				from(INPUT_ENDPOINT).id("hystrix-main-route").to(
-						"hystrix://" + TO_ENDPOINT + "?fallback=" + FALLBACK_ENDPOINT + "&commandGroupKey=" + COMMAND_GROUP_KEY);
+						"hystrix://" + TO_ENDPOINT + "?fallback=" + FALLBACK_ENDPOINT + "&commandGroupKey=" + COMMAND_GROUP_KEY
+								+ "&commandKey=" + COMMAND_KEY
+								+ "&circuitBreakerErrorThresholdPercentage=50&circuitBreakerRequestVolumeThreshold=2");
+								//We count statistics over the last 1 second with 10 buckets, so each bucket is 100ms.
+								//+ "&metricsRollingStatisticalWindowInMilliseconds=10000&metricsRollingStatisticalWindowBuckets=10");
 
 				// to route.
 				from(TO_ENDPOINT).id("hystrix-to-route").log("to-route");
