@@ -1,4 +1,4 @@
-package org.jboss.ddoyle.camel;
+package org.jboss.ddoyle.camel.hystrix;
 
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
@@ -8,6 +8,8 @@ import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
+import org.jboss.ddoyle.camel.hystrix.command.HystrixCommandFactory;
+import org.jboss.ddoyle.camel.hystrix.command.HystrixCommandFactoryBuilder;
 
 /**
  * Represents a camel-hystrix-component endpoint.
@@ -17,50 +19,36 @@ import org.apache.camel.spi.UriPath;
 @UriEndpoint(scheme = "hystrix", title = "camel-hystrix-component", syntax="hystrix:name", label = "camel-hystrix-component")
 public class HystrixEndpoint extends DefaultEndpoint {
 	
-    @UriParam(name="bla")
-    private String hystrixCommandGroupKey;
-    
-    @UriPath(name = "to") @Metadata(required = "true")
+	@UriPath 
+    @Metadata(required = "true")
     private String to;
-    
-    @UriParam(name="blabla")
+	
+	@UriParam
     private String fallback;
+	
+	@UriParam
+	private HystrixEndpointConfiguration configuration;
     
-    public HystrixEndpoint() {
+    
+    public HystrixEndpoint(String uri, HystrixComponent component, String to, HystrixEndpointConfiguration configuration) {
+    	super(uri, component);
+    	this.to = to;
+    	this.configuration = configuration;
     }
-
-    public HystrixEndpoint(String uri, HystrixComponent component) {
-        super(uri, component);
-    }
-
-    public HystrixEndpoint(String endpointUri) {
-        super(endpointUri);
-    }
-
-    public Producer createProducer() throws Exception {
+	
+	public Producer createProducer() throws Exception {
         return new HystrixProducer(this);
     }
 
+    //We don't support Hystrix Consumers.
     public Consumer createConsumer(Processor processor) throws Exception {
     	throw new UnsupportedOperationException("Consumer not supported for Hystrix endpoint");
     }
+    
 
-    public boolean isSingleton() {
+	public boolean isSingleton() {
         return true;
     }
-
-	public String getHystrixCommandGroupKey() {
-		return hystrixCommandGroupKey;
-	}
-
-	/**
-	 * The key that is used by the Hystrix platform to group Hystrix commands.
-	 * 
-	 * @param hystrixCommandGroupKey
-	 */
-	public void setHystrixCommandGroupKey(String hystrixCommandGroupKey) {
-		this.hystrixCommandGroupKey = hystrixCommandGroupKey;
-	}
 
 	public String getTo() {
 		return to;
@@ -87,5 +75,14 @@ public class HystrixEndpoint extends DefaultEndpoint {
 	public void setFallback(String fallback) {
 		this.fallback = fallback;
 	}
+	
+	public HystrixEndpointConfiguration getConfiguration() {
+		return configuration;
+	}
+
+	public void setConfiguration(HystrixEndpointConfiguration configuration) {
+		this.configuration = configuration;
+	}
+
      
 }

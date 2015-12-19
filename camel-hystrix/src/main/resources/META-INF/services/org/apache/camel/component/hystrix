@@ -1,1 +1,1 @@
-class=org.jboss.ddoyle.camel.HystrixComponent
+class=org.jboss.ddoyle.camel.hystrix.HystrixComponent

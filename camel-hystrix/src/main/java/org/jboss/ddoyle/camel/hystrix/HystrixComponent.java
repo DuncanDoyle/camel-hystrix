@@ -1,4 +1,4 @@
-package org.jboss.ddoyle.camel;
+package org.jboss.ddoyle.camel.hystrix;
 
 import java.util.Map;
 
@@ -22,8 +22,16 @@ public class HystrixComponent extends UriEndpointComponent {
     }
 
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        Endpoint endpoint = new HystrixEndpoint(uri, this);
+        
+    	//Build a new HystrixEndpointConfiguration
+    	HystrixEndpointConfiguration config = new HystrixEndpointConfiguration();
+    	setProperties(config, parameters);
+    	
+    	Endpoint endpoint = new HystrixEndpoint(uri, this, remaining, config);
         setProperties(endpoint, parameters);
+        
         return endpoint;
     }
+
+	
 }
